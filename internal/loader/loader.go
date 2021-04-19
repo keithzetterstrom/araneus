@@ -21,7 +21,11 @@ func NewLoader(logger logtool.Logger) Loader {
 }
 
 func (l * loader) LoadPage(url string) ([]byte, error) {
-	response, _ := http.Get(url)
+	response, err := http.Get(url)
+	if err != nil {
+		l.Logger.ErrorLogger.Println(err)
+		return nil, err
+	}
 
 	bytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
