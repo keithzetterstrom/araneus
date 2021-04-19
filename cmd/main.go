@@ -5,6 +5,7 @@ import (
 	loaderpkg "github.com/keithzetterstrom/araneus/internal/loader"
 	"github.com/keithzetterstrom/araneus/internal/models"
 	parserpkg "github.com/keithzetterstrom/araneus/internal/parser"
+	"github.com/keithzetterstrom/araneus/internal/repository/elasticsearch/db"
 	logtool "github.com/keithzetterstrom/araneus/tools/logger"
 	"log"
 )
@@ -36,6 +37,16 @@ func main()  {
 	}
 
 	PrintItems(items)
+
+	es, err := db.NewESClient()
+	if err != nil {
+		return
+	}
+
+	err = es.CreateESIndex(items)
+	if err != nil {
+		return
+	}
 }
 
 func PrintItems(items []models.Item)  {
