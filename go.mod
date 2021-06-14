@@ -3,6 +3,11 @@ module github.com/keithzetterstrom/araneus
 go 1.15
 
 require (
-	github.com/elastic/go-elasticsearch/v8 v8.0.0-20210414074309-f7ffd04b8d6a
+	github.com/PuerkitoBio/goquery v1.6.1
+	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13
+	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2
+	github.com/kljensen/snowball v0.6.0
+	github.com/olivere/elastic/v7 v7.0.24
+	github.com/shawnohare/go-minhash v0.0.0-20160713203314-58d649feb1f9
 	gopkg.in/yaml.v2 v2.4.0
 )

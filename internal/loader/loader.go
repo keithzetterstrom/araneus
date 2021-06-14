@@ -1,39 +1,67 @@
 package loader
 
 import (
-	logtool "github.com/keithzetterstrom/araneus/tools/logger"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
 
 type loader struct {
-	Logger logtool.Logger
 }
 
 type Loader interface {
 	LoadPage(url string) ([]byte, error)
 }
 
-func NewLoader(logger logtool.Logger) Loader {
-	return &loader{
-		Logger: logger,
-	}
+func NewLoader() Loader {
+	return &loader{}
 }
 
 func (l * loader) LoadPage(url string) ([]byte, error) {
 	response, err := http.Get(url)
 	if err != nil {
-		l.Logger.ErrorLogger.Println(err)
+		return nil, err
+	}
+
+	err = HandleResponseStatus(response.StatusCode)
+	if err != nil {
 		return nil, err
 	}
 
 	bytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		l.Logger.ErrorLogger.Println(err)
 		return nil, err
 	}
 
 	response.Body.Close()
 
 	return bytes, nil
+}
+
+func HandleResponseStatus(statusCode int) error {
+	switch {
+	case isSuccess(statusCode):
+		return nil
+
+	case isClientError(statusCode):
+		return fmt.Errorf("Response status %d ", statusCode)
+
+	case isServerError(statusCode):
+		return fmt.Errorf("Response status %d ", statusCode)
+
+	default:
+		return nil
+	}
+}
+
+func isSuccess(code int) bool {
+	return code == 200
+}
+
+func isClientError(code int) bool {
+	return code >= 400 && code < 500
+}
+
+func isServerError(code int) bool {
+	return code >= 500
 }
