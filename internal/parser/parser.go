@@ -7,6 +7,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	loaderpkg "github.com/keithzetterstrom/araneus/internal/loader"
 	"github.com/keithzetterstrom/araneus/internal/models"
+	"sync"
 	"time"
 )
 
@@ -69,15 +70,22 @@ func convertXMLItemToItem(item Item) (*models.Item, error) {
 }
 
 func (p * parser) ParseItemPage(items []*models.Item) ([]*models.Item, error) {
+	wg := &sync.WaitGroup{}
 	for _, item := range items {
-		text, err := p.parseItem(item.Link)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		item.Text = text
-		break
+		wg.Add(1)
+		go func(i *models.Item, wg *sync.WaitGroup) {
+			text, err := p.parseItem(i.Link)
+			if err != nil {
+				fmt.Println(err)
+				wg.Done()
+				return
+			}
+			i.Text = text
+			wg.Done()
+			return
+		}(item, wg)
 	}
+	wg.Wait()
 	return items, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type loader struct {
@@ -18,12 +19,7 @@ func NewLoader() Loader {
 }
 
 func (l * loader) LoadPage(url string) ([]byte, error) {
-	response, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-
-	err = HandleResponseStatus(response.StatusCode)
+	response, err := HandleResponse(url)
 	if err != nil {
 		return nil, err
 	}
@@ -38,19 +34,24 @@ func (l * loader) LoadPage(url string) ([]byte, error) {
 	return bytes, nil
 }
 
-func HandleResponseStatus(statusCode int) error {
-	switch {
-	case isSuccess(statusCode):
-		return nil
+func HandleResponse(url string) (*http.Response, error) {
+	for {
+		response, err := http.Get(url)
+		if err != nil {
+			return nil, err
+		}
 
-	case isClientError(statusCode):
-		return fmt.Errorf("Response status %d ", statusCode)
+		switch {
+		case isSuccess(response.StatusCode):
+			return response, nil
 
-	case isServerError(statusCode):
-		return fmt.Errorf("Response status %d ", statusCode)
+		case tooManyRequests(response.StatusCode):
+			time.Sleep(15 * time.Second)
+			continue
 
-	default:
-		return nil
+		default:
+			return nil, fmt.Errorf("Response status %d ", response.StatusCode)
+		}
 	}
 }
 
@@ -58,10 +59,6 @@ func isSuccess(code int) bool {
 	return code == 200
 }
 
-func isClientError(code int) bool {
-	return code >= 400 && code < 500
-}
-
-func isServerError(code int) bool {
-	return code >= 500
+func tooManyRequests(code int) bool {
+	return code == 429
 }
