@@ -11,4 +11,5 @@ type Item struct {
 	PubDate     time.Time `json:"pub_date"`
 	Category    string    `json:"category"`
 	Text        string    `json:"text"`
+	Signature   []uint64  `json:"signature"`
 }

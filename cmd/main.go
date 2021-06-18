@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/keithzetterstrom/araneus/internal/itemsGRPC/protoItems"
 	loaderpkg "github.com/keithzetterstrom/araneus/internal/loader"
 	"github.com/keithzetterstrom/araneus/internal/models"
 	parserpkg "github.com/keithzetterstrom/araneus/internal/parser"
 	"github.com/keithzetterstrom/araneus/internal/repository/elasticsearch"
+	"google.golang.org/grpc"
+	"log"
 )
 
 const parseURL = "https://lenta.ru/rss/news"
@@ -16,6 +20,19 @@ const (
 )
 
 func main()  {
+	grpcConnItem, err := grpc.Dial(
+		"[::]:50051",
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		log.Fatalf("cant connect to grpc")
+	}
+	defer grpcConnItem.Close()
+
+	// =============================
+
+	itemsClient := protoItems.NewItemServiceClient(grpcConnItem)
+
 	fmt.Println("araneus")
 
 	loader := loaderpkg.NewLoader()
@@ -54,6 +71,15 @@ func main()  {
 		return
 	}
 
+	for _, item := range itemsWithText{
+		grpcItem := &protoItems.ItemGRPC{Text: item.Text}
+		signature, err := itemsClient.SetSignature(context.Background(), grpcItem)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		item.Signature = signature.Signature
+	}
 
 	err = es.InsertItems(itemsWithText)
 	if err != nil {
