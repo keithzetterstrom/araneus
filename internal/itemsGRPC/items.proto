@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package protoItems;
+option go_package = "./protoItems";
+
+service ItemService {
+  rpc SetSignature(ItemGRPC) returns (ItemGRPC);
+}
+
+message ItemGRPC {
+  repeated uint64 Signature = 1;
+  string Text = 2;
+}
