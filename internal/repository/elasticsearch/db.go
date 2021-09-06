@@ -62,7 +62,12 @@ func (es *ESClient) CreateIndex() error {
 func (es *ESClient) createMapping() error {
 	ctx := context.Background()
 
-	_, err := es.client.PutMapping().
+	_, err := es.client.IndexPutSettings().Index(indexName).BodyString(PutSetting).Do(ctx)
+	if err != nil {
+		log.Println("Error with put mapping", err)
+		return err
+	}
+	_, err = es.client.PutMapping().
 		Index(indexName).
 		BodyString(PutMapping).
 		Do(ctx)
